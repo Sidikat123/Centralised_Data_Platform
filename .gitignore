@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env/
+
+
+# Data
+*.csv
+*.parquet
+*.xlsx
+
+# Models
+*.joblib
+*.pkl
+*.h5
+*.pt
+model/randomforest_tuned_model.pkl
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+
