@@ -8,9 +8,9 @@ st.set_page_config(
 
 # --- Banner Image ---
 st.image(
-    r"C:\Users\USER\Desktop\Projects\Data Science\Centralized Data Platform\deploy\banner.png",
+    "deploy/banner.png",
     caption="Premium Real Estate | AlloyTower Inc.",
-    width="stretch"
+    width="auto"
 )
 
 # --- Main Title & Subtitle ---
