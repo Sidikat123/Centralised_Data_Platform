@@ -4,13 +4,13 @@ import pandas as pd
 # --- Load Dataset ---
 @st.cache_data
 def load_data():
-    df = pd.read_csv("../model/cleaned_data.csv")  # Adjust the path if needed
 
+    df = pd.read_csv("model/cleaned_data.csv")
     # Clean up string columns
     for col in ["CITY", "STATE", "COUNTY", "PROPERTYTYPE", "ZIPCODE", "LISTINGTYPE"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
-
+            
     return df
 
 df = load_data()
