@@ -10,7 +10,7 @@ st.set_page_config(
 st.image(
     "deploy/banner.png",
     caption="Premium Real Estate | AlloyTower Inc.",
-    width="auto"
+    width="stretch"
 )
 
 # --- Main Title & Subtitle ---
