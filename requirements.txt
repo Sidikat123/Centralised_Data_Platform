@@ -17,6 +17,7 @@ prophet
 pmdarima
 streamlit
 streamlit-shap
+huggingface_hub
 
 
 
