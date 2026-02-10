@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from streamlit_shap import st_shap 
 from huggingface_hub import hf_hub_download
-from huggingface_hub.utils import HfApi
+from huggingface_hub import HfApi
 import pickle
 import json
 import shap
