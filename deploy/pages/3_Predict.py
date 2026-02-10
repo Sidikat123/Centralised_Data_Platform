@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from streamlit_shap import st_shap 
 from huggingface_hub import hf_hub_download
-from huggingface_hub import HfApi
 import pickle
 import json
 import shap
@@ -21,15 +20,13 @@ REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
 
 # Download files from Hugging Face
 try:
-    model_path = hf_hub_download(repo_id=REPO_ID, filename="randomforest_tuned_model.pkl")
-    shap_path = hf_hub_download(repo_id=REPO_ID, filename="shap_explainer.joblib")
-    features_path = hf_hub_download(repo_id=REPO_ID, filename="features_schema.json")
-    freq_map_path = hf_hub_download(repo_id=REPO_ID, filename="frequency_maps.json")
-    ref_avg_path = hf_hub_download(repo_id=REPO_ID, filename="reference_averages.json")
+    model_path = hf_hub_download(repo_id=REPO_ID, filename="randomforest_tuned_model.pkl", token=hf_token)
+    features_path = hf_hub_download(repo_id=REPO_ID, filename="features_schema.json", token=hf_token)
+    freq_map_path = hf_hub_download(repo_id=REPO_ID, filename="frequency_maps.json", token=hf_token)
+    ref_avg_path = hf_hub_download(repo_id=REPO_ID, filename="reference_averages.json", token=hf_token)
 except Exception as e:
     st.error(f"❌ Failed to load model/artifacts from Hugging Face: {e}")
     st.stop()
-
 
 # Load model
 @st.cache_resource
@@ -37,13 +34,7 @@ def load_model():
     with open(model_path, "rb") as f:
         model = pickle.load(f)  
 
-# Load SHAP explainer
-@st.cache_resource
-def load_explainer():
-    explainer = joblib.load(shap_path)
-
 model = load_model()
-explainer = load_explainer()
 
 # Load other artifacts
 with open(features_path, "r") as f:
@@ -65,6 +56,10 @@ reference_averages["propertytype"] = {
 
 # SHAP Compatibility
 FEATURE_COLUMNS = [str(col) for col in FEATURE_COLUMNS]
+
+@st.cache_resource
+def load_explainer(model):
+    return shap.TreeExplainer(model)
 
 # App Config 
 st.set_page_config(page_title="AlloyTower Inc Real Estate Price Estimator", layout="wide")
@@ -198,8 +193,10 @@ if submit:
         # --- SHAP Explanation ---
         with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
             try:
+                # Load explainer (cached)
+                explainer = load_explainer(model)
+
                 # Prepare features for SHAP
-                explainer = shap.TreeExplainer(model)
                 X = prepare_features_for_shap()
                 shap_values = explainer(X)
 
