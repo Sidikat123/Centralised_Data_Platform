@@ -6,14 +6,17 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from streamlit_shap import st_shap 
 from huggingface_hub import hf_hub_download
+from huggingface_hub.utils import HfApi
 import pickle
 import json
 import shap
 import os
 import joblib  
 
+# Load Hugging Face token from Streamlit secrets
+hf_token = st.secrets.get("HF_TOKEN")
 
-# Replace this with your actual Hugging Face repo
+# Hugging Face Repo ID
 REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
 
 # Download files from Hugging Face
@@ -189,6 +192,7 @@ if submit:
         with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
             try:
                 # Prepare features for SHAP
+                explainer = shap.TreeExplainer(model)
                 X = prepare_features_for_shap()
                 shap_values = explainer(X)
 
