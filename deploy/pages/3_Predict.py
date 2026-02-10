@@ -17,15 +17,23 @@ import joblib
 REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
 
 # Download files from Hugging Face
-model_path = hf_hub_download(repo_id=REPO_ID, filename="randomforest_tuned_model.pkl")
-shap_path = hf_hub_download(repo_id=REPO_ID, filename="shap_explainer.joblib")
-features_path = hf_hub_download(repo_id=REPO_ID, filename="features_schema.json")
-freq_map_path = hf_hub_download(repo_id=REPO_ID, filename="frequency_maps.json")
-ref_avg_path = hf_hub_download(repo_id=REPO_ID, filename="reference_averages.json")
+try:
+    model_path = hf_hub_download(repo_id=REPO_ID, filename="randomforest_tuned_model.pkl")
+    shap_path = hf_hub_download(repo_id=REPO_ID, filename="shap_explainer.joblib")
+    features_path = hf_hub_download(repo_id=REPO_ID, filename="features_schema.json")
+    freq_map_path = hf_hub_download(repo_id=REPO_ID, filename="frequency_maps.json")
+    ref_avg_path = hf_hub_download(repo_id=REPO_ID, filename="reference_averages.json")
+except Exception as e:
+    st.error(f"❌ Failed to load model/artifacts from Hugging Face: {e}")
+    st.stop()
+
 
 # Load model
 with open(model_path, "rb") as f:
-    model = joblib.load(f)  # or pickle.load(f) if you used pickle
+    model = pickle.load(f)  # or pickle.load(f) if you used pickle
+
+# Load SHAP explainer
+explainer = joblib.load(shap_path)
 
 # Load other artifacts
 with open(features_path, "r") as f:
@@ -45,13 +53,8 @@ reference_averages["propertytype"] = {
     k.strip().lower(): v for k, v in reference_averages.get("propertytype", {}).items()
 }
 
-# Load model and SHAP explainer
-model = joblib.load(model_path)
-explainer = joblib.load(shap_path)
-
 # SHAP Compatibility
 FEATURE_COLUMNS = [str(col) for col in FEATURE_COLUMNS]
-
 
 # App Config 
 st.set_page_config(page_title="AlloyTower Inc Real Estate Price Estimator", layout="wide")
@@ -186,7 +189,6 @@ if submit:
         with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
             try:
                 # Prepare features for SHAP
-                explainer = shap.TreeExplainer(model)
                 X = prepare_features_for_shap()
                 shap_values = explainer(X)
 
