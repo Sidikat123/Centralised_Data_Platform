@@ -1,19 +1,53 @@
 import streamlit as st
+import os
 
-# --- Page Config ---
-st.set_page_config(
-    page_title="🏠 AlloyTower Home",
-    layout="wide"
-)
+# Page Config (must be at top) 
+st.set_page_config(page_title="🏠 AlloyTower Home", layout="wide")
 
-# --- Banner Image ---
-st.image(
-    "deploy/banner.png",
-    caption="Premium Real Estate | AlloyTower Inc.",
-    width="stretch"
-)
+# Auth Setup 
+USERS = {
+    "admin": "password123",
+    "user": "alloytower"
+}
 
-# --- Main Title & Subtitle ---
+# Initialize session state
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+# Login Gate
+if not st.session_state.authenticated:
+    st.title("🔐 AlloyTower Secure Access")
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if USERS.get(username) == password:
+            st.session_state.authenticated = True
+            st.success("✅ Login successful")
+            st.experimental_rerun()
+        else:
+            st.error("❌ Invalid username or password")
+
+    st.stop()  # Prevents rest of app from loading until login is valid
+
+# Logout Button (visible only after login) 
+if st.sidebar.button("🔓 Logout"):
+    st.session_state.authenticated = False
+    st.experimental_rerun()
+
+# Banner 
+banner_path = os.path.join("deploy", "banner.png")
+local_fallback = r"C:\Users\USER\Desktop\Projects\Data Science\Centralized Data Platform\deploy\banner.png"
+
+if os.path.exists(banner_path):
+    st.image(banner_path, caption="Premium Real Estate | AlloyTower Inc.", use_column_width=True)
+elif os.path.exists(local_fallback):
+    st.image(local_fallback, caption="Premium Real Estate | AlloyTower Inc.", width="stretch")
+else:
+    st.warning("🔍 Banner image not found.")
+
+# Main Title 
 st.markdown("""
 <h1 style='text-align: center; color: #336699;'>
     🏠 Welcome to AlloyTower Inc Real Estate Platform
@@ -25,14 +59,14 @@ st.markdown("""
 
 st.markdown("---")
 
-# --- Overview Section with Image ---
+# Overview Section 
 col1, col2 = st.columns([1, 2])
 
 with col1:
     st.image(
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
         caption="Modern Urban Property",
-        width="stretch"
+        use_column_width=True
     )
 
 with col2:
@@ -49,7 +83,7 @@ with col2:
 
 st.markdown("---")
 
-# --- Feature Navigation Info ---
+# Platform Features
 st.subheader("🔍 Platform Features")
 
 st.markdown("""
@@ -59,7 +93,7 @@ st.markdown("""
 - 🏘️ **Inquiry Form** – Submit questions or connect directly with agents  
 """)
 
-# Management Team 
+# Optional: Management Team 
 with st.expander("👥 Meet Our Management Team"):
     st.markdown("""
     - **CEO**: Akintayo Adesola  
@@ -68,8 +102,10 @@ with st.expander("👥 Meet Our Management Team"):
     - **Head of Data Analytics**: Chinelo Akinleye
     - **Head of Business Analysis**: Rashidat Musa       
     - **Chief Product Officer**: Ogunwole Peace  
-""")
+    """)
 
 # --- Footer ---
 st.markdown("---")
 st.markdown("<p style='text-align:center;'>© 2026 AlloyTower Inc. All rights reserved.</p>", unsafe_allow_html=True)
+
+
