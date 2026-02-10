@@ -236,8 +236,22 @@ if submit:
                         shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
                         st.pyplot(fig)
 
+                        # Save static version of the SHAP plot for Streamlit
+                        shap_plot_path = os.path.join("shap_outputs", "shap_plot.png")
+                        os.makedirs(os.path.dirname(shap_plot_path), exist_ok=True)
+                        fig.savefig(shap_plot_path)
+
                     except Exception as e:
                         st.error(f"SHAP Feature Importance plot failed: {e}")
+
+        # --- Static SHAP fallback (Streamlit Cloud only) ---
+        elif not ENABLE_SHAP:
+            static_path = os.path.join("shap_outputs", "shap_plot.png")
+            if os.path.exists(static_path):
+                with st.expander("🔍 SHAP Explanation (Static Image)", expanded=False):
+                    st.image(static_path, caption="Static SHAP Bar Plot (from local run)")
+            else:
+                st.info("📸 SHAP static plot not available yet. Run locally to generate it.")
 
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Failed to get prediction: {e}")
