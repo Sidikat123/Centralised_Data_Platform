@@ -32,11 +32,18 @@ except Exception as e:
 
 
 # Load model
-with open(model_path, "rb") as f:
-    model = pickle.load(f)  # or pickle.load(f) if you used pickle
+@st.cache_resource
+def load_model():
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)  
 
 # Load SHAP explainer
-explainer = joblib.load(shap_path)
+@st.cache_resource
+def load_explainer():
+    explainer = joblib.load(shap_path)
+
+model = load_model()
+explainer = load_explainer()
 
 # Load other artifacts
 with open(features_path, "r") as f:
