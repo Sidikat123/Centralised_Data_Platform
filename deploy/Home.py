@@ -1,10 +1,10 @@
 import streamlit as st
 import os
 
-# Page Config (must be at top) 
+# --- Page Config ---
 st.set_page_config(page_title="🏠 AlloyTower Home", layout="wide")
 
-# Auth Setup 
+# --- Auth Setup ---
 USERS = {
     "admin": "password123",
     "user": "alloytower"
@@ -14,29 +14,7 @@ USERS = {
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
-# Login Gate
-if not st.session_state.authenticated:
-    st.title("🔐 AlloyTower Secure Access")
-
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if USERS.get(username) == password:
-            st.session_state.authenticated = True
-            st.success("✅ Login successful")
-            st.experimental_rerun()
-        else:
-            st.error("❌ Invalid username or password")
-
-    st.stop()  # Prevents rest of app from loading until login is valid
-
-# Logout Button (visible only after login) 
-if st.sidebar.button("🔓 Logout"):
-    st.session_state.authenticated = False
-    st.experimental_rerun()
-
-# Banner 
+# --- BANNER IMAGE ---
 banner_path = os.path.join("deploy", "banner.png")
 local_fallback = r"C:\Users\USER\Desktop\Projects\Data Science\Centralized Data Platform\deploy\banner.png"
 
@@ -47,7 +25,7 @@ elif os.path.exists(local_fallback):
 else:
     st.warning("🔍 Banner image not found.")
 
-# Main Title 
+# --- Main Title ---
 st.markdown("""
 <h1 style='text-align: center; color: #336699;'>
     🏠 Welcome to AlloyTower Inc Real Estate Platform
@@ -59,7 +37,26 @@ st.markdown("""
 
 st.markdown("---")
 
-# Overview Section 
+# --- Login Section (inside expander) ---
+with st.expander("🔐 Login to Access Full Platform"):
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if USERS.get(username) == password:
+            st.session_state.authenticated = True
+            st.success("✅ Login successful. Use the sidebar to navigate.")
+            st.experimental_rerun()
+        else:
+            st.error("❌ Invalid username or password")
+
+# --- Logout button (if authenticated) ---
+if st.session_state.authenticated:
+    st.sidebar.success("🔓 Logged in")
+    if st.sidebar.button("Logout"):
+        st.session_state.authenticated = False
+        st.experimental_rerun()
+
+# --- Overview Section ---
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -83,15 +80,19 @@ with col2:
 
 st.markdown("---")
 
-# Platform Features
+# --- Platform Features ---
 st.subheader("🔍 Platform Features")
 
 st.markdown("""
-- 📋 **Property Listings** – Filter and explore properties by city, type, and status 
-- 📈 **Demand and Market Analytics** – Explore Power BI dashboards for live market insights 
+- 📋 **Property Listings** – Filter and explore properties by city, type, and status  
+- 📈 **Demand and Market Analytics** – Explore Power BI dashboards for live market insights  
 - 📊 **Predict Price + SHAP Explainability** – AI-powered price estimation with transparent reasoning  
 - 🏘️ **Inquiry Form** – Submit questions or connect directly with agents  
 """)
+
+# --- Optional message to guide user ---
+if not st.session_state.authenticated:
+    st.info("🔐 Please log in to access Listings, Predict, Analytics, and Inquiry pages via the sidebar.")
 
 # Optional: Management Team 
 with st.expander("👥 Meet Our Management Team"):
