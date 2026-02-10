@@ -1,27 +1,20 @@
 pandas
 numpy
 requests
-snowflake-connector-python
 python-dotenv
-ipykernel
-pyarrow
 matplotlib
 seaborn
 scikit-learn==1.7.2
-statsmodels
 xgboost
 category_encoders
 catboost
-mlflow
-prophet
-pmdarima
 streamlit
 streamlit-shap
 huggingface_hub
 joblib
-pkl
 shap
 plotly
+
 
 
 
