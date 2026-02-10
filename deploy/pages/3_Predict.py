@@ -12,6 +12,9 @@ import shap
 import os
 import joblib  
 
+# Toggle SHAP (set to True locally, False on Streamlit Cloud)
+ENABLE_SHAP = False
+
 # Load Hugging Face token from Streamlit secrets
 hf_token = st.secrets.get("HF_TOKEN")
 
@@ -142,6 +145,7 @@ if submit:
         "propertytype": propertytype,
         "listed_date": listed_date.isoformat()
     }
+    
 
     try:
         response = requests.post("https://kl8fjd4z-8000.uks1.devtunnels.ms/predict", json=payload) 
@@ -188,25 +192,26 @@ if submit:
                 ],
             }
         ))
-        st.plotly_chart(fig, use_container_width=stretch)
+        st.plotly_chart(fig, use_container_width=True)
 
         # --- SHAP Explanation ---
-        with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
-            try:
-                # Load explainer (cached)
-                explainer = load_explainer(model)
+        if ENABLE_SHAP:
+            with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
+                try:
+                    # Load explainer (cached)
+                    explainer = load_explainer(model)
 
-                # Prepare features for SHAP
-                X = prepare_features_for_shap()
-                shap_values = explainer(X)
+                    # Prepare features for SHAP
+                    X = prepare_features_for_shap()
+                    shap_values = explainer(X)
 
-                st.subheader("SHAP Feature Importance (Bar Plot)")
-                fig, ax = plt.subplots(figsize=(10, 6))
-                shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
-                st.pyplot(fig)
+                    st.subheader("SHAP Feature Importance (Bar Plot)")
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
+                    st.pyplot(fig)
 
-            except Exception as e:
-                st.error(f"SHAP waterfall plot failed: {e}")
+                except Exception as e:
+                    st.error(f"SHAP waterfall plot failed: {e}")
 
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Failed to get prediction: {e}")
