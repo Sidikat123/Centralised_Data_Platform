@@ -11,30 +11,12 @@ import json
 import shap
 import os
 import joblib  
-from dotenv import load_dotenv
 
-load_dotenv()
+# Toggle SHAP (set to True locally, False on Streamlit Cloud)
+ENABLE_SHAP = False
 
-# Detect if running locally (default to local = True)
-IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
-
-# Toggle SHAP: enable only in local environment
-ENABLE_SHAP = IS_LOCAL  # Automatically True for local, False for Streamlit Cloud
-
-# Load Hugging Face token (works locally and on Streamlit Cloud)
-hf_token = None
-
-try:
-    hf_token = st.secrets["HF_TOKEN"]          # Streamlit Cloud or local secrets.toml
-except Exception:
-    hf_token = os.getenv("HF_TOKEN")            # Local environment variable fallback
-
-if hf_token is None:
-    st.warning("🔑 Hugging Face token not found. Model download may fail.")
-
-# Path to model file
-if IS_LOCAL:
-    model_path = os.path.join("model", "randomforest_tuned_model.pkl")
+# Load Hugging Face token from Streamlit secrets
+hf_token = st.secrets.get("HF_TOKEN")
 
 # Hugging Face Repo ID
 REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
@@ -52,17 +34,10 @@ except Exception as e:
 # Load model
 @st.cache_resource
 def load_model():
-    try:
-        with open(model_path, "rb") as f:
-            model = pickle.load(f)
-        return model
-    except Exception as e:
-        st.error(f"❌ Error loading model: {e}")
-        return None
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)  
 
-model = load_model()  # Load the model
-
-st.write("Model loaded:", model is not None)  # Debug check
+model = load_model()
 
 # Load other artifacts
 with open(features_path, "r") as f:
@@ -86,8 +61,8 @@ reference_averages["propertytype"] = {
 FEATURE_COLUMNS = [str(col) for col in FEATURE_COLUMNS]
 
 @st.cache_resource
-def load_explainer(_model):
-    return shap.TreeExplainer(_model)
+def load_explainer(model):
+    return shap.TreeExplainer(model)
 
 # App Config 
 st.set_page_config(page_title="AlloyTower Inc Real Estate Price Estimator", layout="wide")
@@ -171,6 +146,7 @@ if submit:
         "listed_date": listed_date.isoformat()
     }
     
+
     try:
         response = requests.post("https://kl8fjd4z-8000.uks1.devtunnels.ms/predict", json=payload) 
         result = response.json()
@@ -216,42 +192,26 @@ if submit:
                 ],
             }
         ))
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, use_container_width=True)
 
         # --- SHAP Explanation ---
         if ENABLE_SHAP:
-            if model is None:
-                st.error("Model not loaded. SHAP explainability not available.")
-            else:
-                with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
-                    try:
-                        explainer = load_explainer(model)
+            with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
+                try:
+                    # Load explainer (cached)
+                    explainer = load_explainer(model)
 
-                        # Prepare input for SHAP
-                        X = prepare_features_for_shap()
-                        shap_values = explainer(X)
+                    # Prepare features for SHAP
+                    X = prepare_features_for_shap()
+                    shap_values = explainer(X)
 
-                        st.subheader("SHAP Feature Importance (Bar Plot)")
-                        fig, ax = plt.subplots(figsize=(10, 6))
-                        shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
-                        st.pyplot(fig)
+                    st.subheader("SHAP Feature Importance (Bar Plot)")
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
+                    st.pyplot(fig)
 
-                        # Save static version of the SHAP plot for Streamlit
-                        shap_plot_path = os.path.join("shap_outputs", "shap_plot.png")
-                        os.makedirs(os.path.dirname(shap_plot_path), exist_ok=True)
-                        fig.savefig(shap_plot_path)
-
-                    except Exception as e:
-                        st.error(f"SHAP Feature Importance plot failed: {e}")
-
-        # --- Static SHAP fallback (Streamlit Cloud only) ---
-        elif not ENABLE_SHAP:
-            static_path = os.path.join("shap_outputs", "shap_plot.png")
-            if os.path.exists(static_path):
-                with st.expander("🔍 SHAP Explanation (Static Image)", expanded=False):
-                    st.image(static_path, caption="Static SHAP Bar Plot (from local run)")
-            else:
-                st.info("📸 SHAP static plot not available yet. Run locally to generate it.")
+                except Exception as e:
+                    st.error(f"SHAP waterfall plot failed: {e}")
 
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Failed to get prediction: {e}")
