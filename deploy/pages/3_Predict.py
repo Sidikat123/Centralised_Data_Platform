@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Detect Local Environment 
-IS_LOCAL = os.getenv("IS_LOCAL", "false").lower() == "true"
+IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
 ENABLE_SHAP = IS_LOCAL  # SHAP is only enabled locally
 
 # Load Hugging Face Token 
