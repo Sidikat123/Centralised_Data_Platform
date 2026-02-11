@@ -1,6 +1,12 @@
 import streamlit as st
+from lib.app_shell import init_state, hide_default_streamlit_pages_nav, render_sidebar
 
 st.set_page_config(page_title="📝 Submit Inquiry", layout="wide")
+
+init_state()
+hide_default_streamlit_pages_nav()
+render_sidebar()
+
 st.title("📨 Inquiry Submission")
 
 with st.form("inquiry_form"):

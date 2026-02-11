@@ -1,22 +1,40 @@
-import streamlit as st
-import pandas as pd
-
 # --- Load Dataset ---
+import os
+import pandas as pd
+import streamlit as st
+from lib.app_shell import init_state, hide_default_streamlit_pages_nav, render_sidebar
+
 @st.cache_data
 def load_data():
+    # Define possible paths
+    cloud_path = os.path.join("model", "cleaned_data.csv")
+    local_path = os.path.join("..", "model", "cleaned_data.csv")
+  
+    # Select the first path that exists
+    if os.path.exists(cloud_path):
+        df = pd.read_csv(cloud_path)
+    elif os.path.exists(local_path):
+        df = pd.read_csv(local_path)
+    else:
+        st.error("❌ Dataset not found. Checked cloud and local paths.")
+        st.stop()
 
-    df = pd.read_csv("model/cleaned_data.csv")
     # Clean up string columns
     for col in ["CITY", "STATE", "COUNTY", "PROPERTYTYPE", "ZIPCODE", "LISTINGTYPE"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
-            
+
     return df
 
 df = load_data()
 
 # --- UI Config ---
 st.set_page_config(page_title="📋 Property Listings", layout="wide")
+
+init_state()
+hide_default_streamlit_pages_nav()
+render_sidebar()
+
 st.title("🏘️ Property Listings")
 
 # --- Filters UI ---

@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 from streamlit_shap import st_shap 
 from huggingface_hub import hf_hub_download
+from lib.app_shell import init_state, hide_default_streamlit_pages_nav, render_sidebar, require_auth
 import pickle
 import json
 import shap
@@ -123,6 +124,12 @@ def load_explainer(_model):
 
 # App Config 
 st.set_page_config(page_title="AlloyTower Inc Real Estate Price Estimator", layout="wide")
+
+init_state()
+hide_default_streamlit_pages_nav()
+render_sidebar()
+
+require_auth()  # ✅ blocks access if not logged in
 
 st.markdown("<h1 style='text-align: center; color:#336699;'>🏠 AlloyTower Inc Real Estate Price Estimator</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Predict home prices with confidence intervals and explainable ML.</p>", unsafe_allow_html=True)

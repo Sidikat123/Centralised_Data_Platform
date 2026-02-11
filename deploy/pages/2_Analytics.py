@@ -1,6 +1,13 @@
 import streamlit as st
+from lib.app_shell import init_state, hide_default_streamlit_pages_nav, render_sidebar, require_auth
 
 st.set_page_config(page_title="📈 Market Analytics", layout="wide")
+
+init_state()
+hide_default_streamlit_pages_nav()
+render_sidebar()
+
+require_auth()  # ✅ blocks access if not logged in
 
 st.title("📊 Demand and Market Analytics")
 st.markdown("Visual insights into regional demand, historical pricing trends, and market movement.")

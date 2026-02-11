@@ -1,4 +1,5 @@
 import streamlit as st
+from lib.app_shell import init_state, hide_default_streamlit_pages_nav, render_sidebar
 import os
 
 # --- Page Config ---
@@ -6,6 +7,10 @@ st.set_page_config(
     page_title="🏠 AlloyTower Home",
     layout="wide"
 )
+
+init_state()
+hide_default_streamlit_pages_nav()
+render_sidebar()
 
 # Determine the correct path to the banner
 banner_path = os.path.join("deploy", "banner.png")
