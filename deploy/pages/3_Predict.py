@@ -13,16 +13,11 @@ import os
 import joblib  
 from dotenv import load_dotenv
 
-import os
-from dotenv import load_dotenv
-from huggingface_hub import hf_hub_download
-import streamlit as st
-
 # --- Load .env variables ---
 load_dotenv()
 
 # Detect Local Environment 
-IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
+IS_LOCAL = os.getenv("IS_LOCAL", "false").lower() == "true"
 ENABLE_SHAP = IS_LOCAL  # SHAP is only enabled locally
 
 # Load Hugging Face Token 
@@ -62,6 +57,7 @@ if IS_LOCAL:
 
     for key, filename in artifact_files.items():
         artifact_paths[key] = os.path.join(LOCAL_MODEL_DIR, filename)
+    
 
 # 🔵 STREAMLIT CLOUD (download from HuggingFace)
 else:
