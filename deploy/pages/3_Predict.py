@@ -26,7 +26,7 @@ hf_token = os.getenv("HF_TOKEN")
 # On Streamlit Cloud, token may come from secrets
 if not hf_token:
     try:
-        hf_token = st.secrets["HF_TOKEN"]
+        hf_token = st.secrets["HF_TOKEN"] 
     except Exception:
         hf_token = None
 
