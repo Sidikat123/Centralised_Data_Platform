@@ -15,7 +15,7 @@ local_fallback = r"C:\Users\USER\Desktop\Projects\Data Science\Centralized Data 
 
 # Final path to use
 if os.path.exists(banner_path):
-    st.image(banner_path, caption="Premium Real Estate | AlloyTower Inc.", width=True)
+    st.image(banner_path, caption="Premium Real Estate | AlloyTower Inc.", width="stretch")
 elif os.path.exists(local_fallback):
     st.image(local_fallback, caption="Premium Real Estate | AlloyTower Inc.", width="stretch")
 else:
