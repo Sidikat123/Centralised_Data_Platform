@@ -21,17 +21,26 @@ import streamlit as st
 # --- Load .env variables ---
 load_dotenv()
 
-# --- Detect Local Environment ---
+# Detect Local Environment 
 IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
 ENABLE_SHAP = IS_LOCAL  # SHAP is only enabled locally
 
-# --- Load HF Token ---
+# Load Hugging Face Token 
 hf_token = os.getenv("HF_TOKEN")
+
+# On Streamlit Cloud, token may come from secrets
 if not hf_token:
+    try:
+        hf_token = st.secrets["HF_TOKEN"]
+    except Exception:
+        hf_token = None
+
+if not hf_token and not IS_LOCAL:
     st.warning("🔑 Hugging Face token not found. Model download may fail.")
 
-# --- Hugging Face Repo and Artifact Filenames ---
+# --- Hugging Face Repo ---
 REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
+
 artifact_files = {
     "model": "randomforest_tuned_model.pkl",
     "features": "features_schema.json",
@@ -39,26 +48,38 @@ artifact_files = {
     "ref_avg": "reference_averages.json"
 }
 
-# --- Prepare artifact paths ---
 artifact_paths = {}
 
+# 🟢 LOCAL ENVIRONMENT (load from local /model folder)
 if IS_LOCAL:
-    # Define absolute base directory (parent of current file)
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    # Build paths assuming model/ is one level above this script (e.g. in 'deploy/pages/')
+    # Get project root (two levels up from deploy/pages/)
+    PROJECT_ROOT = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..")
+    )
+
+    LOCAL_MODEL_DIR = os.path.join(PROJECT_ROOT, "model")
+
     for key, filename in artifact_files.items():
-        artifact_paths[key] = os.path.join(BASE_DIR, "..", "model", filename)
+        artifact_paths[key] = os.path.join(LOCAL_MODEL_DIR, filename)
+
+# 🔵 STREAMLIT CLOUD (download from HuggingFace)
 else:
-    # Download from Hugging Face
     try:
+        from huggingface_hub import hf_hub_download
+
         for key, filename in artifact_files.items():
-            artifact_paths[key] = hf_hub_download(repo_id=REPO_ID, filename=filename, token=hf_token)
+            artifact_paths[key] = hf_hub_download(
+                repo_id=REPO_ID,
+                filename=filename,
+                token=hf_token
+            )
+
     except Exception as e:
-        st.error(f"❌ Failed to load model or files from Hugging Face Hub: {e}")
+        st.error(f"❌ Failed to load model/artifacts from Hugging Face Hub: {e}")
         st.stop()
 
-# --- Access paths for later use ---
+# --- Final paths used later in app ---
 model_path = artifact_paths["model"]
 features_path = artifact_paths["features"]
 freq_map_path = artifact_paths["freq_map"]
