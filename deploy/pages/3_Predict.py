@@ -11,12 +11,30 @@ import json
 import shap
 import os
 import joblib  
+from dotenv import load_dotenv
 
-# Toggle SHAP (set to True locally, False on Streamlit Cloud)
-ENABLE_SHAP = False
+load_dotenv()
 
-# Load Hugging Face token from Streamlit secrets
-hf_token = st.secrets.get("HF_TOKEN")
+# Detect if running locally (default to local = True)
+IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
+
+# Toggle SHAP: enable only in local environment
+ENABLE_SHAP = IS_LOCAL  # Automatically True for local, False for Streamlit Cloud
+
+# Load Hugging Face token (works locally and on Streamlit Cloud)
+hf_token = None
+
+try:
+    hf_token = st.secrets["HF_TOKEN"]          # Streamlit Cloud or local secrets.toml
+except Exception:
+    hf_token = os.getenv("HF_TOKEN")            # Local environment variable fallback
+
+if hf_token is None:
+    st.warning("🔑 Hugging Face token not found. Model download may fail.")
+
+# Path to model file
+if IS_LOCAL:
+    model_path = os.path.join("model", "randomforest_tuned_model.pkl")
 
 # Hugging Face Repo ID
 REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
@@ -34,10 +52,17 @@ except Exception as e:
 # Load model
 @st.cache_resource
 def load_model():
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)  
+    try:
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+        return model
+    except Exception as e:
+        st.error(f"❌ Error loading model: {e}")
+        return None
 
-model = load_model()
+model = load_model()  # Load the model
+
+st.write("Model loaded:", model is not None)  # Debug check
 
 # Load other artifacts
 with open(features_path, "r") as f:
@@ -61,8 +86,8 @@ reference_averages["propertytype"] = {
 FEATURE_COLUMNS = [str(col) for col in FEATURE_COLUMNS]
 
 @st.cache_resource
-def load_explainer(model):
-    return shap.TreeExplainer(model)
+def load_explainer(_model):
+    return shap.TreeExplainer(_model)
 
 # App Config 
 st.set_page_config(page_title="AlloyTower Inc Real Estate Price Estimator", layout="wide")
@@ -146,7 +171,6 @@ if submit:
         "listed_date": listed_date.isoformat()
     }
     
-
     try:
         response = requests.post("https://kl8fjd4z-8000.uks1.devtunnels.ms/predict", json=payload) 
         result = response.json()
@@ -192,28 +216,31 @@ if submit:
                 ],
             }
         ))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # --- SHAP Explanation ---
         if ENABLE_SHAP:
-            with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
-                try:
-                    # Load explainer (cached)
-                    explainer = load_explainer(model)
+            if model is None:
+                st.error("Model not loaded. SHAP explainability not available.")
+            else:
+                with st.expander("🔍 Show SHAP Feature Impact (Explainability)", expanded=False):
+                    try:
+                        explainer = load_explainer(model)
 
-                    # Prepare features for SHAP
-                    X = prepare_features_for_shap()
-                    shap_values = explainer(X)
+                        # Prepare input for SHAP
+                        X = prepare_features_for_shap()
+                        shap_values = explainer(X)
 
-                    st.subheader("SHAP Feature Importance (Bar Plot)")
-                    fig, ax = plt.subplots(figsize=(10, 6))
-                    shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
-                    st.pyplot(fig)
+                        st.subheader("SHAP Feature Importance (Bar Plot)")
+                        fig, ax = plt.subplots(figsize=(10, 6))
+                        shap.plots.bar(shap_values, max_display=len(FEATURE_COLUMNS), show=False)
+                        st.pyplot(fig)
 
-                except Exception as e:
-                    st.error(f"SHAP waterfall plot failed: {e}")
+                    except Exception as e:
+                        st.error(f"SHAP Feature Importance plot failed: {e}")
 
     except requests.exceptions.RequestException as e:
         st.error(f"❌ Failed to get prediction: {e}")
     except Exception as e:
         st.error(f"⚠️ Unexpected error: {str(e)}")
+
