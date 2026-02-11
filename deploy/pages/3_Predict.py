@@ -13,31 +13,41 @@ import os
 import joblib  
 from dotenv import load_dotenv
 
+# Load .env variables
 load_dotenv()
 
-# Detect if running locally (default to local = True)
+# Detect local environment
 IS_LOCAL = os.getenv("IS_LOCAL", "true").lower() == "true"
+ENABLE_SHAP = IS_LOCAL  # SHAP only in local
 
-# Toggle SHAP: enable only in local environment
-ENABLE_SHAP = IS_LOCAL  # Automatically True for local, False for Streamlit Cloud
-
-# Load Hugging Face token (works locally and on Streamlit Cloud)
-hf_token = None
-
-try:
-    hf_token = st.secrets["HF_TOKEN"]          # Streamlit Cloud or local secrets.toml
-except Exception:
-    hf_token = os.getenv("HF_TOKEN")            # Local environment variable fallback
-
-if hf_token is None:
+# Load Hugging Face token
+hf_token = st.secrets.get("HF_TOKEN") or os.getenv("HF_TOKEN")
+if not hf_token:
     st.warning("🔑 Hugging Face token not found. Model download may fail.")
 
-# Path to model file
-if IS_LOCAL:
-    model_path = os.path.join("model", "randomforest_tuned_model.pkl")
-
-# Hugging Face Repo ID
+# Define repo and artifact filenames
 REPO_ID = "Sidikat123/Centralised-Data-Platform-Model"
+artifact_files = {
+    "model": "randomforest_tuned_model.pkl",
+    "features": "features_schema.json",
+    "freq_map": "frequency_maps.json",
+    "ref_avg": "reference_averages.json"
+}
+
+# Set model and artifact paths
+artifact_paths = {}
+
+if IS_LOCAL:
+    # Load model from local path
+    artifact_paths["model"] = os.path.join("model", artifact_files["model"])
+else:
+    # Download from Hugging Face
+    try:
+        for key, filename in artifact_files.items():
+            artifact_paths[key] = hf_hub_download(repo_id=REPO_ID, filename=filename, token=hf_token)
+    except Exception as e:
+        st.error(f"❌ Failed to load model or files from Hugging Face Hub: {e}")
+        st.stop()
 
 # Download files from Hugging Face
 try:
