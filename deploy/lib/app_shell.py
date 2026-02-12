@@ -8,9 +8,10 @@ USER_FILE = "users.json"
 # Exact paths based on your filenames
 HOME_PATH = "Home.py"
 LISTINGS_PATH = "pages/1_Listings.py"
-ANALYTICS_PATH = "pages/2_Analytics.py"
-PREDICT_PATH = "pages/3_Predict.py"
-INQUIRY_PATH = "pages/4_Inquiry_Form.py"
+FIND_AGENT_PATH = "pages/2_Find_Agent.py"
+ANALYTICS_PATH = "pages/3_Analytics.py"
+PREDICT_PATH = "pages/4_Predict.py"
+INQUIRY_PATH = "pages/5_Inquiry_Form.py"
 
 
 def _ensure_user_file():
@@ -80,6 +81,9 @@ def sidebar_nav():
 
     if st.button("📋 Listings", use_container_width=True):
         st.switch_page(LISTINGS_PATH)
+    
+    if st.button("🧑‍💼 Find Agent 🔒", disabled=(not authed), use_container_width=True):
+        st.switch_page(FIND_AGENT_PATH)
 
     if st.button("📊 Analytics 🔒", disabled=(not authed), use_container_width=True):
         st.switch_page(ANALYTICS_PATH)
@@ -91,7 +95,7 @@ def sidebar_nav():
         st.switch_page(INQUIRY_PATH)
 
     if not authed:
-        st.caption("🔒 Login to unlock Analytics and Predict.")
+        st.caption("🔒 Login to unlock Find Agent, Analytics and Predict.")
 
 
 def auth_box():
