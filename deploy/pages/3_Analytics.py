@@ -17,14 +17,14 @@ powerbi_url = "https://app.powerbi.com/view?r=eyJrIjoiNGQwMzE2ODItMDE4OS00OTkzLT
 
 st.markdown(
     f"""
-    <iframe
-        title="ALLOYTOWERS INC PROJECT"
-        width="1100"
-        height="650"
+    <div style="width: 100%; margin-top: 0.5rem;">
+      <iframe
+        title="INC PROJECT"
         src="{powerbi_url}"
-        frameborder="0"
+        style="width: 100%; height: 650px; border: 0; display: block;"
         allowfullscreen="true">
-    </iframe>
+      </iframe>
+    </div>
     """,
     unsafe_allow_html=True
 )
